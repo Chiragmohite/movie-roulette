@@ -359,13 +359,31 @@ let isFetching = false;
 
 async function fetchMovie() {
   const page   = Math.floor(Math.random() * 12) + 1;
-  const rating = parseFloat(rslider.value);
-  let url = `/api/discover?rating=${rating}&page=${page}`;
-  if (selectedGenre) url += `&genre=${selectedGenre}`;
-  const r = await fetch(url);
-  const d = await r.json();
+  let rating   = parseFloat(rslider.value);
+  const API_KEY = "db76c689c142949499b276e42606539a";
+
+  async function tryFetch(r) {
+    let url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&vote_count.gte=50&vote_average.gte=${r}&page=${page}&language=en-US`;
+    if (selectedGenre) url += `&with_genres=${selectedGenre}`;
+    const res = await fetch(url);
+    return await res.json();
+  }
+
+  let d = await tryFetch(rating);
+
+  // fallback: loosen rating until we get results
+  while ((!d.results || d.results.length === 0) && rating > 5) {
+    rating = Math.max(rating - 1, 5);
+    d = await tryFetch(rating);
+    if (rating <= 5) break;
+  }
+
   if (!d.results || d.results.length === 0) return null;
-  document.getElementById("count-lbl").textContent = (d.total_results || 0).toLocaleString() + " movies";
+  if (rating < parseFloat(rslider.value)) {
+    document.getElementById("count-lbl").textContent = `No results at that rating — showing best available (${rating}+)`;
+  } else {
+    document.getElementById("count-lbl").textContent = (d.total_results || 0).toLocaleString() + " movies";
+  }
   return d.results[Math.floor(Math.random() * d.results.length)];
 }
 

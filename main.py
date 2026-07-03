@@ -37,9 +37,14 @@ async def discover(
     if genre:
         params["with_genres"] = genre
 
-    async with httpx.AsyncClient() as client:
-        r = await client.get(f"{TMDB_BASE}/discover/movie", params=params)
-        return r.json()
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            r = await client.get(f"{TMDB_BASE}/discover/movie", params=params)
+            return r.json()
+        except httpx.ConnectTimeout:
+            return {"error": "TMDB timeout", "results": [], "total_results": 0}
+        except Exception as e:
+            return {"error": str(e), "results": [], "total_results": 0}
 
 # Serve the frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
