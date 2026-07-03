@@ -114,6 +114,10 @@
 
 
 
+  .l-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+  .l-btn:hover{background:rgba(255,255,255,0.12);color:#fff}
+  .l-btn.on{background:rgba(255,200,80,0.18);border-color:rgba(255,200,80,0.5);color:rgba(255,200,80,1)}
+
   #hint{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,0.25);pointer-events:none;letter-spacing:0.5px}
 </style>
 </head>
@@ -160,6 +164,12 @@
     <button class="g-btn" data-id="14">Fantasy</button>
   </div>
 
+  <div id="lang-bar" style="display:flex;gap:6px;margin-bottom:10px">
+    <button class="l-btn on" data-lang="">🌍 All</button>
+    <button class="l-btn" data-lang="en">🎬 Hollywood</button>
+    <button class="l-btn" data-lang="hi">🎭 Bollywood</button>
+  </div>
+
   <div id="now-playing">
     <div id="movie-title">Spin the vault to find your next watch</div>
     <div id="movie-meta"></div>
@@ -182,11 +192,21 @@
 
 // ─── genre filter ───────────────────────────────────────────────────────────
 let selectedGenre = "";
+let selectedLang  = "";
+
 document.querySelectorAll(".g-btn").forEach(b => {
   b.onclick = () => {
     document.querySelectorAll(".g-btn").forEach(x => x.classList.remove("on"));
     b.classList.add("on");
     selectedGenre = b.dataset.id;
+  };
+});
+
+document.querySelectorAll(".l-btn").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".l-btn").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    selectedLang = b.dataset.lang;
   };
 });
 
@@ -365,6 +385,7 @@ async function fetchMovie() {
   async function tryFetch(r) {
     let url = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&vote_count.gte=50&vote_average.gte=${r}&page=${page}&language=en-US`;
     if (selectedGenre) url += `&with_genres=${selectedGenre}`;
+    if (selectedLang)  url += `&with_original_language=${selectedLang}`;
     const res = await fetch(url);
     return await res.json();
   }
