@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movie Roulette — 3D Vault</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0a0f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
+  #cv{display:block;width:100vw;height:100vh}
+
+  #ui{position:fixed;bottom:0;left:0;right:0;padding:20px 28px 24px;background:linear-gradient(transparent,rgba(5,5,10,0.92) 40%);z-index:10}
+
+  #genre-bar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+  .g-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.65);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+  .g-btn:hover{background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.35)}
+  .g-btn.on{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.55);color:#fff}
+
+  #now-playing{margin-bottom:10px}
+  #movie-title{font-size:26px;font-weight:600;color:#fff;letter-spacing:-0.3px;min-height:34px;text-shadow:0 2px 12px rgba(0,0,0,0.8)}
+  #movie-meta{font-size:13px;color:rgba(255,255,255,0.45);margin-top:3px}
+
+  #controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  #spin-btn{padding:11px 32px;border-radius:10px;background:#fff;color:#0a0a0f;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;letter-spacing:-0.2px;transition:opacity 0.15s,transform 0.1s}
+  #spin-btn:hover{opacity:0.88}
+  #spin-btn:active{transform:scale(0.97)}
+  #spin-btn:disabled{opacity:0.35;cursor:not-allowed}
+  #count-lbl{font-size:12px;color:rgba(255,255,255,0.3);font-family:inherit}
+  #rating-wrap{display:flex;align-items:center;gap:8px;margin-left:auto}
+  #rating-wrap label{font-size:12px;color:rgba(255,255,255,0.4)}
+  #rslider{width:90px;accent-color:#fff;cursor:pointer}
+  #rval{font-size:12px;color:rgba(255,255,255,0.75);min-width:26px}
+
+  /* ── cinematic center banner ── */
+  #backdrop{
+    display:none;position:fixed;inset:0;z-index:99;
+    background:rgba(0,0,0,0);
+    transition:background 0.4s ease;
+    cursor:pointer;
+  }
+  #backdrop.open{display:block;background:rgba(0,0,0,0.65);}
+
+  #banner{
+    display:none;
+    position:fixed;top:50%;left:50%;
+    transform:translate(-50%,-50%) scale(0.88);
+    z-index:100;
+    width:min(680px,92vw);
+    border-radius:18px;
+    overflow:hidden;
+    opacity:0;
+    transition:opacity 0.35s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow:0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
+  }
+  #banner.open{
+    display:flex;opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+  }
+
+  /* blurred backdrop image behind content */
+  #banner-bg{
+    position:absolute;inset:0;
+    background-size:cover;background-position:center;
+    filter:blur(28px) brightness(0.35);
+    transform:scale(1.1);
+  }
+  #banner-inner{
+    position:relative;z-index:1;
+    display:flex;gap:24px;
+    padding:28px;
+    background:linear-gradient(135deg,rgba(10,10,20,0.7),rgba(5,5,12,0.85));
+  }
+  #banner-poster{
+    width:130px;height:195px;
+    border-radius:10px;object-fit:cover;
+    flex-shrink:0;
+    box-shadow:0 8px 32px rgba(0,0,0,0.6);
+    background:rgba(255,255,255,0.05);
+  }
+  #banner-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  #banner-tag{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,200,80,0.8);margin-bottom:8px}
+  #banner-title{font-size:28px;font-weight:700;color:#fff;line-height:1.2;letter-spacing:-0.5px}
+  #banner-meta{font-size:13px;color:rgba(255,255,255,0.45);margin-top:6px}
+  #banner-overview{
+    font-size:13px;color:rgba(255,255,255,0.65);
+    margin-top:14px;line-height:1.7;
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  #banner-btns{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+  .bb{
+    padding:8px 18px;border-radius:8px;
+    border:1px solid rgba(255,255,255,0.2);
+    background:rgba(255,255,255,0.08);
+    color:rgba(255,255,255,0.75);
+    font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;
+    transition:all 0.15s;
+  }
+  .bb:hover{background:rgba(255,255,255,0.18);color:#fff;border-color:rgba(255,255,255,0.4)}
+  .bb.hi{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.5);color:#fff}
+  #banner-close{
+    position:absolute;top:14px;right:14px;
+    width:28px;height:28px;border-radius:50%;
+    background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);
+    color:rgba(255,255,255,0.6);font-size:14px;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:all 0.15s;z-index:2;
+  }
+  #banner-close:hover{background:rgba(255,255,255,0.2);color:#fff}
+
+  /* star rating */
+  #banner-stars{display:flex;align-items:center;gap:4px;margin-top:8px}
+  .star{font-size:14px;color:rgba(255,200,80,0.85)}
+  #banner-vote{font-size:12px;color:rgba(255,255,255,0.35);margin-left:4px}
+
+
+
+  #hint{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,0.25);pointer-events:none;letter-spacing:0.5px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hint">drag to spin · click to explore</div>
+
+<!-- cinematic center banner -->
+<div id="backdrop" onclick="closeBanner()"></div>
+<div id="banner">
+  <div id="banner-bg"></div>
+  <button id="banner-close" onclick="closeBanner()">✕</button>
+  <div id="banner-inner">
+    <img id="banner-poster" alt="">
+    <div id="banner-info">
+      <div id="banner-tag">Tonight's Pick</div>
+      <div id="banner-title"></div>
+      <div id="banner-meta"></div>
+      <div id="banner-stars"></div>
+      <div id="banner-overview"></div>
+      <div id="banner-btns">
+        <button class="bb hi" onclick="closeBanner();spin()">Spin Again</button>
+        <button class="bb" id="bb-tmdb">View on TMDB</button>
+        <button class="bb" id="bb-trailer">Trailer ↗</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="ui">
+  <div id="genre-bar">
+    <button class="g-btn on" data-id="">All genres</button>
+    <button class="g-btn" data-id="28">Action</button>
+    <button class="g-btn" data-id="35">Comedy</button>
+    <button class="g-btn" data-id="18">Drama</button>
+    <button class="g-btn" data-id="27">Horror</button>
+    <button class="g-btn" data-id="878">Sci-Fi</button>
+    <button class="g-btn" data-id="53">Thriller</button>
+    <button class="g-btn" data-id="10749">Romance</button>
+    <button class="g-btn" data-id="16">Animation</button>
+    <button class="g-btn" data-id="80">Crime</button>
+    <button class="g-btn" data-id="9648">Mystery</button>
+    <button class="g-btn" data-id="14">Fantasy</button>
+  </div>
+
+  <div id="now-playing">
+    <div id="movie-title">Spin the vault to find your next watch</div>
+    <div id="movie-meta"></div>
+  </div>
+
+  <div id="controls">
+    <button id="spin-btn" onclick="spin()">Spin the vault</button>
+    <span id="count-lbl"></span>
+    <div id="rating-wrap">
+      <label>Min rating</label>
+      <input type="range" id="rslider" min="0" max="9" step="0.5" value="6">
+      <span id="rval">6.0</span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// API key is handled by the backend proxy
+
+// ─── genre filter ───────────────────────────────────────────────────────────
+let selectedGenre = "";
+document.querySelectorAll(".g-btn").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".g-btn").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    selectedGenre = b.dataset.id;
+  };
+});
+
+const rslider = document.getElementById("rslider");
+const rval    = document.getElementById("rval");
+rslider.oninput = () => rval.textContent = parseFloat(rslider.value).toFixed(1);
+
+// ─── Three.js setup ─────────────────────────────────────────────────────────
+const canvas   = document.getElementById("cv");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a0f, 1);
+renderer.shadowMap.enabled = true;
+
+const scene  = new THREE.Scene();
+scene.fog    = new THREE.FogExp2(0x0a0a0f, 0.028);
+
+const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 300);
+camera.position.set(0, 2.5, 13);
+camera.lookAt(0, 0, 0);
+
+window.addEventListener("resize", () => {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+});
+renderer.setSize(innerWidth, innerHeight);
+
+// ─── lighting ────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+const keyLight = new THREE.PointLight(0x6688ff, 3, 35);
+keyLight.position.set(-6, 10, 6);
+scene.add(keyLight);
+
+const rimLight = new THREE.PointLight(0xff5533, 2, 28);
+rimLight.position.set(6, 6, -8);
+scene.add(rimLight);
+
+const fillLight = new THREE.PointLight(0x88ffcc, 1, 20);
+fillLight.position.set(0, -4, 10);
+scene.add(fillLight);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
+sunLight.position.set(0, 12, 5);
+scene.add(sunLight);
+
+// ─── floor (reflective plane) ─────────────────────────────────────────────
+const floorMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(80, 80),
+  new THREE.MeshStandardMaterial({ color: 0x06060c, roughness: 0.3, metalness: 0.7 })
+);
+floorMesh.rotation.x = -Math.PI / 2;
+floorMesh.position.y = -1.06;
+scene.add(floorMesh);
+
+// ─── card textures ────────────────────────────────────────────────────────
+const PALETTES = [
+  ["#1a0a2e","#4a1080"],["#0a1a2e","#1050a0"],["#2e0a0a","#a03010"],
+  ["#0a2e1a","#10a050"],["#2e2a0a","#a09010"],["#1a1a2e","#5050c0"],
+  ["#2e0a1a","#a01050"],["#0a2e2e","#10a0a0"],["#1e0a0e","#803040"],
+];
+
+function makeCardTexture(palette) {
+  const c = document.createElement("canvas");
+  c.width = 256; c.height = 384;
+  const ctx = c.getContext("2d");
+  const grd = ctx.createLinearGradient(0, 0, 256, 384);
+  grd.addColorStop(0, palette[0]);
+  grd.addColorStop(1, palette[1]);
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, 256, 384);
+  // film strip holes top
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  for (let i = 0; i < 8; i++) { ctx.fillRect(8 + i*30, 8, 18, 14); }
+  // scan lines
+  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  for (let y = 0; y < 384; y += 4) { ctx.fillRect(0, y, 256, 2); }
+  // placeholder poster art lines
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(20, 36, 216, 280);
+  ctx.beginPath();
+  ctx.moveTo(20, 36); ctx.lineTo(236, 316);
+  ctx.moveTo(236, 36); ctx.lineTo(20, 316);
+  ctx.stroke();
+  // bottom label area
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(0, 330, 256, 54);
+  const t = new THREE.CanvasTexture(c);
+  return t;
+}
+
+// ─── vault cards ──────────────────────────────────────────────────────────
+const TOTAL  = 48;
+const RADIUS = 8;
+const CW = 1.5, CH = 2.25, CD = 0.07;
+const cards  = [];
+
+for (let i = 0; i < TOTAL; i++) {
+  const angle   = (i / TOTAL) * Math.PI * 2;
+  const palette = PALETTES[i % PALETTES.length];
+  const frontTex = makeCardTexture(palette);
+
+  const mats = [
+    new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.7, metalness: 0.5 }),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.7, metalness: 0.5 }),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.7, metalness: 0.5 }),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a28, roughness: 0.7, metalness: 0.5 }),
+    new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.45, metalness: 0.25 }),
+    new THREE.MeshStandardMaterial({ color: 0x0d0d18, roughness: 0.9, metalness: 0.1 }),
+  ];
+
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(CW, CH, CD), mats);
+  mesh.position.set(Math.cos(angle) * RADIUS, 0, Math.sin(angle) * RADIUS);
+  mesh.rotation.y = -angle + Math.PI / 2;
+  mesh.userData = { baseAngle: angle };
+  scene.add(mesh);
+  cards.push(mesh);
+}
+
+// ─── particles ───────────────────────────────────────────────────────────
+const particleCount = 300;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  pPos[i*3]   = (Math.random() - 0.5) * 40;
+  pPos[i*3+1] = (Math.random() - 0.5) * 20;
+  pPos[i*3+2] = (Math.random() - 0.5) * 40;
+}
+pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({ color: 0x8888cc, size: 0.06, transparent: true, opacity: 0.5 });
+scene.add(new THREE.Points(pGeo, pMat));
+
+// ─── drag interaction ────────────────────────────────────────────────────
+let rotY = 0, autoSpin = true, isDragging = false, lastX = 0, velocity = 0;
+let highlighted = -1;
+
+canvas.addEventListener("mousedown",  e => { isDragging = true; lastX = e.clientX; autoSpin = false; velocity = 0; });
+window.addEventListener("mouseup",    () => { isDragging = false; });
+window.addEventListener("mousemove",  e => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastX;
+  velocity = dx * 0.002;
+  rotY    += dx * 0.003;
+  lastX    = e.clientX;
+});
+canvas.addEventListener("touchstart", e => { isDragging = true; lastX = e.touches[0].clientX; autoSpin = false; }, { passive: true });
+window.addEventListener("touchend",   () => { isDragging = false; });
+window.addEventListener("touchmove",  e => {
+  if (!isDragging) return;
+  const dx = e.touches[0].clientX - lastX;
+  velocity = dx * 0.002;
+  rotY    += dx * 0.003;
+  lastX    = e.touches[0].clientX;
+}, { passive: true });
+
+// ─── spin animation ──────────────────────────────────────────────────────
+let spinAnim = false, spinStart = 0, spinTarget = 0, spinStartTime = 0;
+const SPIN_DURATION = 2600;
+let chosenIdx = -1;
+
+function easeInOutQuint(t) {
+  return t < 0.5 ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2;
+}
+
+// ─── API fetch ───────────────────────────────────────────────────────────
+let currentId = null, currentTitle = "";
+let isFetching = false;
+
+async function fetchMovie() {
+  const page   = Math.floor(Math.random() * 12) + 1;
+  const rating = parseFloat(rslider.value);
+  let url = `/api/discover?rating=${rating}&page=${page}`;
+  if (selectedGenre) url += `&genre=${selectedGenre}`;
+  const r = await fetch(url);
+  const d = await r.json();
+  if (!d.results || d.results.length === 0) return null;
+  document.getElementById("count-lbl").textContent = (d.total_results || 0).toLocaleString() + " movies";
+  return d.results[Math.floor(Math.random() * d.results.length)];
+}
+
+async function spin() {
+  if (isFetching) return;
+  isFetching = true;
+  document.getElementById("spin-btn").disabled = true;
+  closeBanner();
+  document.getElementById("movie-title").textContent = "Spinning…";
+  document.getElementById("movie-meta").textContent  = "";
+  highlighted = -1;
+
+  let movie = null;
+  try { movie = await fetchMovie(); } catch (e) {}
+
+  chosenIdx   = Math.floor(Math.random() * TOTAL);
+  const target = -Math.PI * 2 * 5 + (chosenIdx / TOTAL) * Math.PI * 2;
+  spinStart     = rotY;
+  spinTarget    = rotY + Math.PI * 2 * 5 - ((rotY) % (Math.PI * 2));
+  spinStartTime = performance.now();
+  spinAnim      = true;
+  autoSpin      = false;
+
+  setTimeout(() => {
+    highlighted = chosenIdx;
+    if (movie) {
+      const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
+      document.getElementById("movie-title").textContent = movie.title;
+      document.getElementById("movie-meta").textContent  =
+        (year ? year : "") + (movie.vote_average ? " · ★ " + movie.vote_average.toFixed(1) : "");
+      showResult(movie);
+    } else {
+      document.getElementById("movie-title").textContent = "Could not fetch movies — is the server running?";
+      document.getElementById("movie-meta").textContent  = "See the banner — takes 2 min to get a free key";
+    }
+    isFetching = false;
+    document.getElementById("spin-btn").disabled = false;
+  }, SPIN_DURATION + 100);
+}
+
+function showResult(movie) {
+  const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
+  currentId    = movie.id;
+  currentTitle = movie.title;
+
+  // populate banner
+  document.getElementById("banner-title").textContent    = movie.title;
+  document.getElementById("banner-overview").textContent = movie.overview || "";
+
+  const rating = movie.vote_average ? movie.vote_average.toFixed(1) : null;
+  const genres = "";
+  document.getElementById("banner-meta").textContent =
+    [year, rating ? "★ " + rating : null].filter(Boolean).join("  ·  ");
+
+  // star display
+  const starsEl = document.getElementById("banner-stars");
+  if (rating) {
+    const filled = Math.round(movie.vote_average / 2);
+    starsEl.innerHTML = Array.from({length:5},(_,i)=>
+      `<span class="star">${i < filled ? "★" : "☆"}</span>`
+    ).join("") + `<span id="banner-vote">${movie.vote_count ? movie.vote_count.toLocaleString() + " votes" : ""}</span>`;
+  } else { starsEl.innerHTML = ""; }
+
+  // poster + blurred bg
+  const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` : "";
+  document.getElementById("banner-poster").src = posterUrl;
+  document.getElementById("banner-bg").style.backgroundImage = posterUrl ? `url(${posterUrl})` : "";
+
+  document.getElementById("bb-tmdb").onclick    = () => window.open(`https://www.themoviedb.org/movie/${movie.id}`, "_blank");
+  document.getElementById("bb-trailer").onclick = () => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + " official trailer")}`, "_blank");
+
+  // open with animation
+  const bd = document.getElementById("backdrop");
+  const bn = document.getElementById("banner");
+  bd.classList.add("open");
+  bn.style.display = "flex";
+  requestAnimationFrame(() => requestAnimationFrame(() => bn.classList.add("open")));
+}
+
+function closeBanner() {
+  const bd = document.getElementById("backdrop");
+  const bn = document.getElementById("banner");
+  bn.classList.remove("open");
+  bd.classList.remove("open");
+  setTimeout(() => { bn.style.display = "none"; }, 350);
+}
+
+// ─── render loop ─────────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+
+  if (spinAnim) {
+    const p = Math.min((now - spinStartTime) / SPIN_DURATION, 1);
+    rotY     = spinStart + easeInOutQuint(p) * (spinTarget - spinStart);
+    if (p >= 1) spinAnim = false;
+  } else if (autoSpin) {
+    rotY += 0.004;
+  } else if (!isDragging && Math.abs(velocity) > 0.0004) {
+    rotY     += velocity;
+    velocity *= 0.94;
+  }
+
+  cards.forEach((card, i) => {
+    const a = card.userData.baseAngle + rotY;
+    card.position.x = Math.cos(a) * RADIUS;
+    card.position.z = Math.sin(a) * RADIUS;
+    card.rotation.y = -a + Math.PI / 2;
+
+    const isHigh   = i === highlighted;
+    const tY       = isHigh ? 0.5 : 0;
+    const tScale   = isHigh ? 1.1 : 1;
+    card.position.y += (tY    - card.position.y) * 0.1;
+    card.scale.setScalar(card.scale.x + (tScale - card.scale.x) * 0.1);
+
+    if (isHigh) {
+      card.material[4].emissive          = new THREE.Color(0x553311);
+      card.material[4].emissiveIntensity = 0.45;
+    } else {
+      card.material[4].emissiveIntensity = 0;
+    }
+  });
+
+  // drift lights
+  keyLight.position.x = Math.sin(now * 0.0007) * 8;
+  rimLight.position.z = Math.cos(now * 0.0005) * 8 - 6;
+  fillLight.position.x = Math.sin(now * 0.0011) * 5;
+
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
