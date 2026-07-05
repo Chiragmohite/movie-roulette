@@ -11,8 +11,9 @@
 
   #ui{position:fixed;bottom:0;left:0;right:0;padding:20px 28px 24px;background:linear-gradient(transparent,rgba(5,5,10,0.92) 40%);z-index:10}
 
-  #genre-bar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
-  .g-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.65);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+  #genre-bar{display:flex;gap:7px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:8px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  #genre-bar::-webkit-scrollbar{display:none}
+  .g-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.65);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0}
   .g-btn:hover{background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.35)}
   .g-btn.on{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.55);color:#fff}
 
@@ -114,9 +115,23 @@
 
 
 
-  .l-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+  .l-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0}
   .l-btn:hover{background:rgba(255,255,255,0.12);color:#fff}
   .l-btn.on{background:rgba(255,200,80,0.18);border-color:rgba(255,200,80,0.5);color:rgba(255,200,80,1)}
+
+  #lang-bar{
+    display:flex;gap:6px;margin-bottom:10px;
+    overflow-x:auto;padding-bottom:4px;
+    scrollbar-width:none;
+  }
+  #lang-bar::-webkit-scrollbar{display:none}
+
+  #genre-bar{
+    display:flex;gap:6px;flex-wrap:nowrap;
+    overflow-x:auto;margin-bottom:8px;padding-bottom:4px;
+    scrollbar-width:none;
+  }
+  #genre-bar::-webkit-scrollbar{display:none}
 
   #hint{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,0.25);pointer-events:none;letter-spacing:0.5px}
 </style>
@@ -164,10 +179,42 @@
     <button class="g-btn" data-id="14">Fantasy</button>
   </div>
 
-  <div id="lang-bar" style="display:flex;gap:6px;margin-bottom:10px">
+  <div id="lang-bar">
     <button class="l-btn on" data-lang="">🌍 All</button>
     <button class="l-btn" data-lang="en">🎬 Hollywood</button>
     <button class="l-btn" data-lang="hi">🎭 Bollywood</button>
+    <button class="l-btn" data-lang="ta">🌴 Tollywood</button>
+    <button class="l-btn" data-lang="te">🎭 Telugu</button>
+    <button class="l-btn" data-lang="ml">🌿 Malayalam</button>
+    <button class="l-btn" data-lang="kn">🎬 Kannada</button>
+    <button class="l-btn" data-lang="ko">🇰🇷 Korean</button>
+    <button class="l-btn" data-lang="ja">🇯🇵 Japanese</button>
+    <button class="l-btn" data-lang="zh">🇨🇳 Chinese</button>
+    <button class="l-btn" data-lang="es">🇪🇸 Spanish</button>
+    <button class="l-btn" data-lang="fr">🇫🇷 French</button>
+    <button class="l-btn" data-lang="de">🇩🇪 German</button>
+    <button class="l-btn" data-lang="it">🇮🇹 Italian</button>
+    <button class="l-btn" data-lang="pt">🇧🇷 Portuguese</button>
+    <button class="l-btn" data-lang="ru">🇷🇺 Russian</button>
+    <button class="l-btn" data-lang="tr">🇹🇷 Turkish</button>
+    <button class="l-btn" data-lang="th">🇹🇭 Thai</button>
+    <button class="l-btn" data-lang="ar">🇸🇦 Arabic</button>
+    <button class="l-btn" data-lang="id">🇮🇩 Indonesian</button>
+    <button class="l-btn" data-lang="nl">🇳🇱 Dutch</button>
+    <button class="l-btn" data-lang="pl">🇵🇱 Polish</button>
+    <button class="l-btn" data-lang="ms">🇲🇾 Malay</button>
+    <button class="l-btn" data-lang="el">🇬🇷 Greek</button>
+    <button class="l-btn" data-lang="sv">🇸🇪 Swedish</button>
+    <button class="l-btn" data-lang="da">🇩🇰 Danish</button>
+    <button class="l-btn" data-lang="fi">🇫🇮 Finnish</button>
+    <button class="l-btn" data-lang="no">🇳🇴 Norwegian</button>
+    <button class="l-btn" data-lang="cs">🇨🇿 Czech</button>
+    <button class="l-btn" data-lang="ro">🇷🇴 Romanian</button>
+    <button class="l-btn" data-lang="hu">🇭🇺 Hungarian</button>
+    <button class="l-btn" data-lang="uk">🇺🇦 Ukrainian</button>
+    <button class="l-btn" data-lang="vi">🇻🇳 Vietnamese</button>
+    <button class="l-btn" data-lang="he">🇮🇱 Hebrew</button>
+    <button class="l-btn" data-lang="fa">🇮🇷 Persian</button>
   </div>
 
   <div id="now-playing">
