@@ -11,9 +11,8 @@
 
   #ui{position:fixed;bottom:0;left:0;right:0;padding:20px 28px 24px;background:linear-gradient(transparent,rgba(5,5,10,0.92) 40%);z-index:10}
 
-  #genre-bar{display:flex;gap:7px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:8px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-  #genre-bar::-webkit-scrollbar{display:none}
-  .g-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.65);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0}
+  #genre-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+  .g-btn{padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.65);font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
   .g-btn:hover{background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,255,255,0.35)}
   .g-btn.on{background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.55);color:#fff}
 
@@ -115,23 +114,11 @@
 
 
 
-  .l-btn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0}
+  .l-btn{padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.55);font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
   .l-btn:hover{background:rgba(255,255,255,0.12);color:#fff}
   .l-btn.on{background:rgba(255,200,80,0.18);border-color:rgba(255,200,80,0.5);color:rgba(255,200,80,1)}
 
-  #lang-bar{
-    display:flex;gap:6px;margin-bottom:10px;
-    overflow-x:auto;padding-bottom:4px;
-    scrollbar-width:none;
-  }
-  #lang-bar::-webkit-scrollbar{display:none}
-
-  #genre-bar{
-    display:flex;gap:6px;flex-wrap:nowrap;
-    overflow-x:auto;margin-bottom:8px;padding-bottom:4px;
-    scrollbar-width:none;
-  }
-  #genre-bar::-webkit-scrollbar{display:none}
+  #lang-bar{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;}
 
   #hint{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,0.25);pointer-events:none;letter-spacing:0.5px}
 </style>
